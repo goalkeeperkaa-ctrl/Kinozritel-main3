@@ -1,0 +1,27 @@
+:root {
+  --aidagis-bg: #20201D;
+  --aidagis-pine: #213834;
+  --aidagis-terracotta: #D1411C;
+  --aidagis-ivory: #EFEDEA;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+  --radius-pill: 999px;
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+  background: var(--aidagis-bg);
+  color: var(--aidagis-ivory);
+}
+
+.ethnic-strip {
+  background-image: repeating-linear-gradient(45deg, rgba(239, 237, 234, 0.08), rgba(239, 237, 234, 0.08) 6px, rgba(209, 65, 28, 0.25) 6px, rgba(209, 65, 28, 0.25) 12px);
+}
