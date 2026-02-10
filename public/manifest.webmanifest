@@ -1,0 +1,12 @@
+{
+  "name": "Aidagis",
+  "short_name": "Aidagis",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#20201D",
+  "theme_color": "#20201D",
+  "lang": "ru",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
