@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id                  String          @id @default(cuid())
+  name                String?
+  email               String?         @unique
+  emailVerified       DateTime?
+  image               String?
+  role                Role            @default(USER)
+  birthDate           DateTime?
+  cityId              String?
+  notificationsEvents Boolean         @default(true)
+  notificationsNews   Boolean         @default(true)
+  city                City?           @relation(fields: [cityId], references: [id])
+  favorites           Favorite[]
+  going               Going[]
+  notifications       Notification[]
+  searchHistory       SearchHistory[]
+  accounts            Account[]
+  sessions            Session[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model City {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  events    Event[]
+  venues    Venue[]
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String          @id @default(cuid())
+  slug      String          @unique
+  name      String
+  events    EventCategory[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Venue {
+  id        String   @id @default(cuid())
+  cityId    String
+  name      String
+  address   String
+  lat       Float
+  lng       Float
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cityId])
+}
+
+model Event {
+  id          String            @id @default(cuid())
+  cityId      String
+  venueId     String
+  slug        String            @unique
+  title       String
+  description String
+  coverUrl    String?
+  priceFrom   Int?
+  isPublished Boolean           @default(true)
+  city        City              @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  venue       Venue             @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  occurrences EventOccurrence[]
+  categories  EventCategory[]
+  media       EventMedia[]
+  favorites   Favorite[]
+  going       Going[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([cityId])
+  @@index([venueId])
+  @@index([title])
+}
+
+model EventOccurrence {
+  id        String   @id @default(cuid())
+  eventId   String
+  startsAt  DateTime
+  endsAt    DateTime
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([startsAt])
+}
+
+model EventCategory {
+  eventId    String
+  categoryId String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, categoryId])
+}
+
+model EventMedia {
+  id        String   @id @default(cuid())
+  eventId   String
+  url       String
+  sortOrder Int      @default(0)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model Favorite {
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, eventId])
+}
+
+model Going {
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, eventId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  query     String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
