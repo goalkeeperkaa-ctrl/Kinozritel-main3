@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import AdminApp from './admin/admin-app';
+import AdminApp from './admin/AdminApp';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
