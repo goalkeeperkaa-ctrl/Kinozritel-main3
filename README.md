@@ -1,125 +1,106 @@
-# Кинозритель: лендинг + админка
+# Aidagis
 
-Проект теперь состоит из:
-- публичного лендинга c формой кандидата (`/`)
-- закрытого админ-кабинета для обработки заявок (`/admin`)
-- backend API + хранилища заявок (Postgres или локальный JSON) + синхронизации в Excel webhook
+Aidagis — MVP мобильного веб-приложения для поиска городских событий.
 
-## Что реализовано
+Стек:
+- Next.js (App Router) + TypeScript
+- TailwindCSS
+- Prisma + Postgres
+- NextAuth (email magic link через SMTP)
+- Mapbox GL JS
+- Route Handlers (`app/api/**/route.ts`)
 
-- Авторизация в админке по логину/паролю (JWT, без токена доступ к API закрыт).
-- Роли:
-  - `admin`: просмотр/редактирование/экспорт.
-  - `viewer`: только просмотр.
-- Список заявок с фильтрами:
-  - статус (мультивыбор)
-  - город
-  - дата (с/по)
-  - источник (`utm_source`)
-  - поиск по ФИО/телефону
-- Быстрые действия в списке:
-  - смена статуса
-  - копирование телефона
-  - открытие карточки
-  - добавление заметки
-- Карточка заявки:
-  - контакты
-  - прохождение шагов
-  - статус/решение
-  - заметки и теги
-  - быстрые кнопки: `Позвонила`, `Написала`, `Не отвечает`, `Назначить интервью`
-- Экспорт:
-  - CSV (по текущим фильтрам)
-  - ссылка на Excel workbook (если задана)
-- Excel интеграция:
-  - при создании/обновлении заявки backend отправляет webhook в Microsoft 365/Power Automate
-- Антидубликаты:
-  - повторные заявки по телефону помечаются как `duplicate`
-- Vercel-ready:
-  - API работает через serverless entrypoint `api/[...path].js`
-  - route `/admin` отдается как SPA через `vercel.json`
+## Основные функции
 
-## Запуск
+Пользователь:
+- Выбор города (локально + в профиле)
+- Лента событий с фильтрами
+- Карта с маркерами и загрузкой по `bbox`
+- Календарь по дате
+- Поиск + история поиска (последние 10)
+- Избранное
+- «Иду»
+- Детальная страница события (галерея, расписание, площадка)
+- Центр уведомлений
+- Профиль пользователя
 
-Требования: Node.js 18+.
+Админ:
+- CRUD городов, категорий, площадок, событий
+- Управление расписанием (`event_occurrences`)
+- Подготовленный endpoint для подписи загрузки в Cloudinary
+- RBAC-защита admin API и admin страниц
 
-1. Установить зависимости:
+## Быстрый старт
 
+1. Установка зависимостей:
 ```bash
 npm install
 ```
 
-2. Запустить фронт и сервер вместе:
+2. Создание `.env`:
+```bash
+cp .env.example .env
+```
 
+3. Генерация Prisma Client:
+```bash
+npm run prisma:generate
+```
+
+4. Миграции и сиды:
+```bash
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+5. Запуск:
 ```bash
 npm run dev
 ```
 
-По умолчанию:
-- фронт: `http://localhost:5173`
-- backend API: `http://localhost:3001`
-- админка: `http://localhost:5173/admin`
-
-## Дефолтный доступ
-
-- Логин: `tatyana`
-- Пароль: `admin12345`
-
-Смените это через переменную `ADMIN_USERS` (см. ниже).
+6. Production-сборка:
+```bash
+npm run build
+```
 
 ## Переменные окружения
 
-- `VITE_API_BASE` — base URL API для фронтенда (если фронт и API на разных доменах)
-- `VITE_API_PROXY_TARGET` — target прокси для dev-сервера Vite (по умолчанию `http://localhost:3001`)
-- `PORT` — порт backend (по умолчанию `3001`)
-- `JWT_SECRET` — секрет для JWT
-- `JWT_EXPIRES_IN` — TTL токена (по умолчанию `12h`)
-- `DEFAULT_ASSIGNEE` — ответственный по умолчанию (по умолчанию `Татьяна`)
-- `DATABASE_URL` — Postgres connection string (рекомендуется для Vercel/production)
-- `DATA_FILE` — путь к JSON базе заявок (используется как fallback, если `DATABASE_URL` не задан)
-- `EXCEL_WEBHOOK_URL` — webhook URL для синхронизации в Excel/Power Automate
-- `EXCEL_WORKBOOK_URL` — URL excel-файла (кнопка "Excel" в админке)
-- `ADMIN_USERS` — пользователи в формате:
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `EMAIL_FROM`
+- `EMAIL_SERVER_HOST`
+- `EMAIL_SERVER_PORT`
+- `EMAIL_SERVER_USER`
+- `EMAIL_SERVER_PASSWORD`
+- `MAPBOX_TOKEN`
+- `NEXT_PUBLIC_MAPBOX_TOKEN`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 
-```text
-username:password:role:displayName;username2:password2:viewer:Name
-```
-
-Пример:
-
-```text
-tatyana:StrongPass123:admin:Татьяна;viewer1:ViewerPass1:viewer:Наблюдатель
-```
-
-Можно скопировать `.env.example` в `.env` и заполнить значения.
-
-## Режимы хранения данных
-
-- `DATABASE_URL` задан: заявки хранятся в Postgres (подходит для Vercel).
-- `DATABASE_URL` пустой: заявки хранятся локально в `server/data/applications.json` (локальная разработка).
-- На Vercel без `DATABASE_URL` fallback идет в `/tmp/kinozritel-applications.json` (временное/эфемерное хранение, не для production).
+Примечание по карте:
+- На клиенте используется `NEXT_PUBLIC_MAPBOX_TOKEN`.
+- Значение `MAPBOX_TOKEN` можно держать как серверный токен для будущих серверных задач.
 
 ## Деплой на Vercel
 
-1. Подключите проект в Vercel (Framework Preset: Vite).
-2. Добавьте переменные окружения:
-   - `JWT_SECRET`
-   - `ADMIN_USERS`
-   - `DATABASE_URL` (обязательно для production)
-   - `EXCEL_WEBHOOK_URL` и `EXCEL_WORKBOOK_URL` (опционально)
-3. Build Command: `npm run build`
-4. Output Directory: `dist`
-5. Deploy.
+1. Импортировать репозиторий в Vercel.
+2. Добавить все env vars в Project Settings.
+3. Настроить Postgres (`DATABASE_URL`).
+4. Build Command: `npm run build`
+5. Install Command: `npm install`
+6. После первого деплоя выполнить миграции в окружении прода:
+```bash
+npm run prisma:deploy
+```
 
-## Как работает Excel интеграция
+## Структура
 
-Backend отправляет POST на `EXCEL_WEBHOOK_URL` при:
-- создании заявки (`action: "create"`)
-- изменении заявки (`action: "update"`)
-
-В payload есть:
-- `application_id`
-- `row` (подготовленный маппинг полей под табличную структуру)
-- `application` (полный объект заявки)
-
-Если webhook не задан, backend логирует предупреждение и продолжает работу.
+- `app/` — страницы и API Route Handlers
+- `app/admin/*` — админ-интерфейс
+- `src/components/*` — UI и доменные компоненты
+- `src/lib/*` — auth/db/helpers
+- `src/theme/*` — дизайн-токены Aidagis
+- `prisma/schema.prisma` — схема БД
+- `prisma/seed.ts` — демо-данные (2 города, 30+ событий)
