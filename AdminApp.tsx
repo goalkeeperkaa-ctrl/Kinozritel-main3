@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
@@ -58,9 +58,9 @@ const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
 };
 
 const formatDateTime = (value: string | null) => {
-  if (!value) return 'вЂ”';
+  if (!value) return '—';
   const date = new Date(value);
-  return Number.isNaN(date.valueOf()) ? 'вЂ”' : date.toLocaleString('ru-RU');
+  return Number.isNaN(date.valueOf()) ? '—' : date.toLocaleString('ru-RU');
 };
 
 const toLocalDateTimeInput = (value: string | null) => {
@@ -78,7 +78,7 @@ const fromLocalDateTimeInput = (value: string) => {
 };
 
 const copyToClipboard = async (text: string) => {
-  if (!navigator.clipboard) throw new Error('Clipboard API РЅРµРґРѕСЃС‚СѓРїРµРЅ');
+  if (!navigator.clipboard) throw new Error('Clipboard API недоступен');
   await navigator.clipboard.writeText(text);
 };
 
@@ -95,8 +95,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onSubmit, loading, error }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-100 via-white to-teal-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-stone-200 rounded-3xl shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-stone-900 mb-2">Р’С…РѕРґ РІ Р°РґРјРёРЅ-РєР°Р±РёРЅРµС‚</h1>
-        <p className="text-sm text-stone-600 mb-6">Р”РѕСЃС‚СѓРї С‚РѕР»СЊРєРѕ РґР»СЏ СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ РїСЂРѕРµРєС‚Р°.</p>
+        <h1 className="text-2xl font-bold text-stone-900 mb-2">Вход в админ-кабинет</h1>
+        <p className="text-sm text-stone-600 mb-6">Доступ только для сотрудников проекта.</p>
         <form
           className="space-y-4"
           onSubmit={async (event) => {
@@ -106,7 +106,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onSubmit, loading, error }) => {
         >
           <div>
             <label className="block text-sm font-semibold text-stone-700 mb-1" htmlFor="admin-username">
-              Р›РѕРіРёРЅ
+              Логин
             </label>
             <input
               id="admin-username"
@@ -119,7 +119,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onSubmit, loading, error }) => {
           </div>
           <div>
             <label className="block text-sm font-semibold text-stone-700 mb-1" htmlFor="admin-password">
-              РџР°СЂРѕР»СЊ
+              Пароль
             </label>
             <input
               id="admin-password"
@@ -139,7 +139,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onSubmit, loading, error }) => {
             className="w-full rounded-xl bg-stone-900 text-white py-3 font-semibold hover:bg-stone-800 disabled:opacity-60"
             disabled={loading}
           >
-            {loading ? 'Р’С…РѕРґРёРј...' : 'Р’РѕР№С‚Рё'}
+            {loading ? 'Входим...' : 'Войти'}
           </button>
         </form>
       </div>
@@ -229,7 +229,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
             onUnauthorized();
             return;
           }
-          setError(requestError instanceof Error ? requestError.message : 'РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё Р·Р°СЏРІРѕРє.');
+          setError(requestError instanceof Error ? requestError.message : 'Ошибка загрузки заявок.');
         } finally {
           setLoading(false);
         }
@@ -266,10 +266,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
     try {
       const response = await patchApplication(token, id, { status });
       updateItem(response.item);
-      setMessage('РЎС‚Р°С‚СѓСЃ РѕР±РЅРѕРІР»РµРЅ.');
+      setMessage('Статус обновлен.');
       setRefreshTick((value) => value + 1);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРјРµРЅРёС‚СЊ СЃС‚Р°С‚СѓСЃ.');
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось сменить статус.');
     } finally {
       setActionId(null);
     }
@@ -277,17 +277,17 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
 
   const handleQuickNote = async (item: CandidateApplication) => {
     if (!canEdit) return;
-    const value = window.prompt('Р”РѕР±Р°РІРёС‚СЊ Р·Р°РјРµС‚РєСѓ', item.notes || '');
+    const value = window.prompt('Добавить заметку', item.notes || '');
     if (value === null) return;
     setActionId(item.id);
     setError('');
     try {
       const response = await patchApplication(token, item.id, { notes: value });
       updateItem(response.item);
-      setMessage('Р—Р°РјРµС‚РєР° СЃРѕС…СЂР°РЅРµРЅР°.');
+      setMessage('Заметка сохранена.');
       setRefreshTick((value) => value + 1);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ Р·Р°РјРµС‚РєСѓ.');
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось сохранить заметку.');
     } finally {
       setActionId(null);
     }
@@ -297,9 +297,9 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
     setError('');
     try {
       await copyToClipboard(phone);
-      setMessage(`РўРµР»РµС„РѕРЅ СЃРєРѕРїРёСЂРѕРІР°РЅ: ${phone}`);
+      setMessage(`Телефон скопирован: ${phone}`);
     } catch {
-      setError('РќРµ СѓРґР°Р»РѕСЃСЊ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ С‚РµР»РµС„РѕРЅ.');
+      setError('Не удалось скопировать телефон.');
     }
   };
 
@@ -322,10 +322,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
           .filter(Boolean),
       });
       updateItem(response.item);
-      setMessage('РљР°СЂС‚РѕС‡РєР° СЃРѕС…СЂР°РЅРµРЅР°.');
+      setMessage('Карточка сохранена.');
       setRefreshTick((value) => value + 1);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РєР°СЂС‚РѕС‡РєСѓ.');
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось сохранить карточку.');
     } finally {
       setSaving(false);
     }
@@ -338,10 +338,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
     try {
       const response = await markContactAttempt(token, selected.id, action);
       updateItem(response.item);
-      setMessage(action === 'called' ? 'РћС‚РјРµС‚РєР° Р·РІРѕРЅРєР° СЃРѕС…СЂР°РЅРµРЅР°.' : 'РћС‚РјРµС‚РєР° СЃРѕРѕР±С‰РµРЅРёСЏ СЃРѕС…СЂР°РЅРµРЅР°.');
+      setMessage(action === 'called' ? 'Отметка звонка сохранена.' : 'Отметка сообщения сохранена.');
       setRefreshTick((value) => value + 1);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РґРµР№СЃС‚РІРёРµ.');
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось сохранить действие.');
     } finally {
       setSaving(false);
     }
@@ -358,10 +358,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
       }
       const response = await patchApplication(token, selected.id, patch);
       updateItem(response.item);
-      setMessage(`РЎС‚Р°С‚СѓСЃ РёР·РјРµРЅРµРЅ: ${status}.`);
+      setMessage(`Статус изменен: ${status}.`);
       setRefreshTick((value) => value + 1);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ.');
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось обновить статус.');
     } finally {
       setSaving(false);
     }
@@ -380,9 +380,9 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setMessage('CSV РІС‹РіСЂСѓР¶РµРЅ.');
+      setMessage('CSV выгружен.');
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'РћС€РёР±РєР° РїСЂРё РІС‹РіСЂСѓР·РєРµ CSV.');
+      setError(requestError instanceof Error ? requestError.message : 'Ошибка при выгрузке CSV.');
     }
   };
 
@@ -391,8 +391,8 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
       <header className="sticky top-0 z-40 bg-white border-b border-stone-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap gap-3 items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-stone-500">РђРґРјРёРЅ-РєР°Р±РёРЅРµС‚ Р·Р°СЏРІРѕРє</p>
-            <h1 className="text-xl font-bold">РљРёРЅРѕР·СЂРёС‚РµР»СЊ</h1>
+            <p className="text-xs uppercase tracking-wide text-stone-500">Админ-кабинет заявок</p>
+            <h1 className="text-xl font-bold">Кинозритель</h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {canEdit ? (
@@ -419,10 +419,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-stone-300 bg-white hover:bg-stone-100 text-sm font-semibold"
               onClick={() => setRefreshTick((value) => value + 1)}
               disabled={loading}
-              title="РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє"
+              title="Обновить список"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-              РћР±РЅРѕРІРёС‚СЊ
+              Обновить
             </button>
             <span className="text-sm text-stone-600 hidden sm:inline">
               {user.displayName} ({user.role})
@@ -432,7 +432,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               onClick={onLogout}
             >
               <LogOut size={16} />
-              Р’С‹Р№С‚Рё
+              Выйти
             </button>
           </div>
         </div>
@@ -440,7 +440,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 space-y-4">
         <div className="text-xs text-stone-500">
-          РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ: {formatDateTime(lastSyncedAt)}
+          Последнее обновление: {formatDateTime(lastSyncedAt)}
         </div>
         {message ? (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">
@@ -456,11 +456,11 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
         <section className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
             <Filter size={16} />
-            <h2 className="font-semibold">Р¤РёР»СЊС‚СЂС‹</h2>
+            <h2 className="font-semibold">Фильтры</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
             <div className="xl:col-span-2">
-              <label className="block text-xs font-semibold text-stone-500 mb-1">РЎС‚Р°С‚СѓСЃС‹</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Статусы</label>
               <select
                 multiple
                 value={filters.status}
@@ -478,7 +478,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-stone-500 mb-1">Р“РѕСЂРѕРґ</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Город</label>
               <input
                 className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
                 value={filters.city}
@@ -486,7 +486,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-stone-500 mb-1">РСЃС‚РѕС‡РЅРёРє UTM</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">�?сточник UTM</label>
               <input
                 className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
                 value={filters.source}
@@ -494,7 +494,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-stone-500 mb-1">Р”Р°С‚Р° СЃ</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Дата с</label>
               <input
                 type="date"
                 className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
@@ -503,7 +503,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-stone-500 mb-1">Р”Р°С‚Р° РїРѕ</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Дата по</label>
               <input
                 type="date"
                 className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
@@ -512,7 +512,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               />
             </div>
             <div className="sm:col-span-2 xl:col-span-4">
-              <label className="block text-xs font-semibold text-stone-500 mb-1">РџРѕРёСЃРє РїРѕ Р¤РРћ/С‚РµР»РµС„РѕРЅСѓ</label>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Поиск по Ф�?О/телефону</label>
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
@@ -527,7 +527,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                 className="w-full rounded-xl border border-stone-300 bg-white hover:bg-stone-100 py-2 text-sm font-semibold"
                 onClick={() => setFilters(DEFAULT_FILTERS)}
               >
-                РЎР±СЂРѕСЃРёС‚СЊ С„РёР»СЊС‚СЂС‹
+                Сбросить фильтры
               </button>
             </div>
           </div>
@@ -558,30 +558,30 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
               <table className="min-w-[980px] w-full text-sm">
                 <thead className="bg-stone-100 text-stone-600">
                   <tr>
-                    <th className="text-left px-3 py-2 font-semibold">Р”Р°С‚Р°/РІСЂРµРјСЏ</th>
-                    <th className="text-left px-3 py-2 font-semibold">Р¤РРћ</th>
-                    <th className="text-left px-3 py-2 font-semibold">РўРµР»РµС„РѕРЅ</th>
-                    <th className="text-left px-3 py-2 font-semibold">Р“РѕСЂРѕРґ</th>
+                    <th className="text-left px-3 py-2 font-semibold">Дата/время</th>
+                    <th className="text-left px-3 py-2 font-semibold">Ф�?О</th>
+                    <th className="text-left px-3 py-2 font-semibold">Телефон</th>
+                    <th className="text-left px-3 py-2 font-semibold">Город</th>
                     <th className="text-left px-3 py-2 font-semibold">18+</th>
-                    <th className="text-left px-3 py-2 font-semibold">РЁР°РіРё</th>
-                    <th className="text-left px-3 py-2 font-semibold">РЎС‚Р°С‚СѓСЃ</th>
-                    <th className="text-left px-3 py-2 font-semibold">РСЃС‚РѕС‡РЅРёРє</th>
-                    <th className="text-left px-3 py-2 font-semibold">РќР°Р·РЅР°С‡РµРЅРѕ</th>
-                    <th className="text-left px-3 py-2 font-semibold">Р”РµР№СЃС‚РІРёСЏ</th>
+                    <th className="text-left px-3 py-2 font-semibold">Шаги</th>
+                    <th className="text-left px-3 py-2 font-semibold">Статус</th>
+                    <th className="text-left px-3 py-2 font-semibold">�?сточник</th>
+                    <th className="text-left px-3 py-2 font-semibold">Назначено</th>
+                    <th className="text-left px-3 py-2 font-semibold">Действия</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
                       <td className="px-3 py-6 text-center text-stone-500" colSpan={10}>
-                        Р—Р°РіСЂСѓР·РєР°...
+                        Загрузка...
                       </td>
                     </tr>
                   ) : null}
                   {!loading && items.length === 0 ? (
                     <tr>
                       <td className="px-3 py-6 text-center text-stone-500" colSpan={10}>
-                        Р—Р°СЏРІРєРё РЅРµ РЅР°Р№РґРµРЅС‹.
+                        Заявки не найдены.
                       </td>
                     </tr>
                   ) : null}
@@ -606,17 +606,17 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                             <button
                               className="inline-flex items-center gap-1 text-stone-700 hover:text-stone-900"
                               onClick={() => void handleCopyPhone(item.phone)}
-                              title="РљРѕРїРёСЂРѕРІР°С‚СЊ С‚РµР»РµС„РѕРЅ"
+                              title="Копировать телефон"
                             >
                               <Copy size={14} />
                               {item.phone}
                             </button>
                           </td>
-                          <td className="px-3 py-2">{item.city || 'вЂ”'}</td>
-                          <td className="px-3 py-2">{item.age_18_confirmed ? 'Р”Р°' : 'РќРµС‚'}</td>
+                          <td className="px-3 py-2">{item.city || '—'}</td>
+                          <td className="px-3 py-2">{item.age_18_confirmed ? 'Да' : 'Нет'}</td>
                           <td className="px-3 py-2">
-                            <div className="text-xs">S1: {item.step1_confirmed ? 'Р”Р°' : 'РќРµС‚'}</div>
-                            <div className="text-xs">S2: {item.step2_video_watched ? 'Р”Р°' : 'РќРµС‚'}</div>
+                            <div className="text-xs">S1: {item.step1_confirmed ? 'Да' : 'Нет'}</div>
+                            <div className="text-xs">S2: {item.step2_video_watched ? 'Да' : 'Нет'}</div>
                           </td>
                           <td className="px-3 py-2">
                             {canEdit ? (
@@ -644,15 +644,15 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                               </span>
                             )}
                           </td>
-                          <td className="px-3 py-2">{item.source_utm?.utm_source || 'вЂ”'}</td>
-                          <td className="px-3 py-2">{item.assigned_to || 'вЂ”'}</td>
+                          <td className="px-3 py-2">{item.source_utm?.utm_source || '—'}</td>
+                          <td className="px-3 py-2">{item.assigned_to || '—'}</td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
                               <button
                                 className="px-2 py-1 rounded-lg border border-stone-300 hover:bg-stone-100 text-xs font-semibold"
                                 onClick={() => setSelectedId(item.id)}
                               >
-                                РћС‚РєСЂС‹С‚СЊ
+                                Открыть
                               </button>
                               {canEdit ? (
                                 <button
@@ -660,7 +660,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                                   onClick={() => void handleQuickNote(item)}
                                   disabled={actionId === item.id}
                                 >
-                                  Р—Р°РјРµС‚РєР°
+                                  Заметка
                                 </button>
                               ) : null}
                             </div>
@@ -675,50 +675,50 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
 
           <aside className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5">
             {!selected || !draft ? (
-              <div className="text-sm text-stone-500">Р’С‹Р±РµСЂРёС‚Рµ Р·Р°СЏРІРєСѓ РёР· СЃРїРёСЃРєР°.</div>
+              <div className="text-sm text-stone-500">Выберите заявку из списка.</div>
             ) : (
               <div className="space-y-5">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-stone-500 mb-1">РљР°СЂС‚РѕС‡РєР° Р·Р°СЏРІРєРё</div>
+                  <div className="text-xs uppercase tracking-wide text-stone-500 mb-1">Карточка заявки</div>
                   <h3 className="text-lg font-bold">{selected.full_name}</h3>
                   <div className="text-xs text-stone-500">{selected.id}</div>
                 </div>
                 <section className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <UserCheck size={15} />
-                    РљРѕРЅС‚Р°РєС‚С‹
+                    Контакты
                   </h4>
-                  <div className="text-sm">РўРµР»РµС„РѕРЅ: {selected.phone}</div>
-                  <div className="text-sm">Email: {selected.email || 'вЂ”'}</div>
-                  <div className="text-sm">Р“РѕСЂРѕРґ: {selected.city || 'вЂ”'}</div>
+                  <div className="text-sm">Телефон: {selected.phone}</div>
+                  <div className="text-sm">Email: {selected.email || '—'}</div>
+                  <div className="text-sm">Город: {selected.city || '—'}</div>
                   <div className="text-sm">
-                    18+: {selected.age_18_confirmed ? 'Р”Р°' : 'РќРµС‚'} | duplicate: {selected.duplicate ? 'Р”Р°' : 'РќРµС‚'}
+                    18+: {selected.age_18_confirmed ? 'Да' : 'Нет'} | duplicate: {selected.duplicate ? 'Да' : 'Нет'}
                   </div>
                 </section>
                 <section className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <CheckCircle2 size={15} />
-                    РџСЂРѕС…РѕР¶РґРµРЅРёРµ С€Р°РіРѕРІ
+                    Прохождение шагов
                   </h4>
-                  <div className="text-sm">РЁР°Рі 1: {selected.step1_confirmed ? 'Р”Р°' : 'РќРµС‚'}</div>
-                  <div className="text-sm">РЁР°Рі 2: {selected.step2_video_watched ? 'Р”Р°' : 'РќРµС‚'}</div>
-                  <div className="text-sm">РљРѕРЅС‚СЂРѕР»СЊРЅС‹Р№ РѕС‚РІРµС‚: {selected.step2_control_answer || 'вЂ”'}</div>
+                  <div className="text-sm">Шаг 1: {selected.step1_confirmed ? 'Да' : 'Нет'}</div>
+                  <div className="text-sm">Шаг 2: {selected.step2_video_watched ? 'Да' : 'Нет'}</div>
+                  <div className="text-sm">Контрольный ответ: {selected.step2_control_answer || '—'}</div>
                   <div className="text-sm">
-                    РўРµСЃС‚:{' '}
+                    Тест:{' '}
                     {Object.keys(selected.quiz_answers || {}).length > 0
                       ? Object.entries(selected.quiz_answers)
                           .map(([question, answer]) => `${question}: ${answer}`)
                           .join(' | ')
-                      : 'вЂ”'}
+                      : '—'}
                   </div>
                 </section>
                 <section className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Clock3 size={15} />
-                    РЎС‚Р°С‚СѓСЃ Рё СЂРµС€РµРЅРёРµ
+                    Статус и решение
                   </h4>
                   <div>
-                    <label className="block text-xs font-semibold text-stone-500 mb-1">РЎС‚Р°С‚СѓСЃ</label>
+                    <label className="block text-xs font-semibold text-stone-500 mb-1">Статус</label>
                     <select
                       className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                       value={draft.status}
@@ -736,7 +736,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                   </div>
                   {draft.status === 'Rejected' ? (
                     <div>
-                      <label className="block text-xs font-semibold text-stone-500 mb-1">РџСЂРёС‡РёРЅР° РѕС‚РєР°Р·Р°</label>
+                      <label className="block text-xs font-semibold text-stone-500 mb-1">Причина отказа</label>
                       <input
                         className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                         list="reject-reasons"
@@ -755,7 +755,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                   ) : null}
                   {draft.status === 'Reserve' ? (
                     <div>
-                      <label className="block text-xs font-semibold text-stone-500 mb-1">РљРѕРіРґР° РІРµСЂРЅСѓС‚СЊСЃСЏ</label>
+                      <label className="block text-xs font-semibold text-stone-500 mb-1">Когда вернуться</label>
                       <input
                         type="datetime-local"
                         className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
@@ -768,7 +768,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                     </div>
                   ) : null}
                   <div>
-                    <label className="block text-xs font-semibold text-stone-500 mb-1">Р”Р°С‚Р°/РІСЂРµРјСЏ РёРЅС‚РµСЂРІСЊСЋ</label>
+                    <label className="block text-xs font-semibold text-stone-500 mb-1">Дата/время интервью</label>
                     <input
                       type="datetime-local"
                       className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
@@ -780,7 +780,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-stone-500 mb-1">РќР°Р·РЅР°С‡РµРЅРѕ</label>
+                    <label className="block text-xs font-semibold text-stone-500 mb-1">Назначено</label>
                     <input
                       className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                       value={draft.assigned_to}
@@ -790,11 +790,11 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                       }
                     />
                   </div>
-                  <div className="text-sm">РџРѕСЃР»РµРґРЅРёР№ РєРѕРЅС‚Р°РєС‚: {formatDateTime(selected.last_contact_at)}</div>
-                  <div className="text-sm">РљРѕР»-РІРѕ РїРѕРїС‹С‚РѕРє: {selected.contact_attempts}</div>
+                  <div className="text-sm">Последний контакт: {formatDateTime(selected.last_contact_at)}</div>
+                  <div className="text-sm">Кол-во попыток: {selected.contact_attempts}</div>
                 </section>
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold">Р—Р°РјРµС‚РєРё РўР°С‚СЊСЏРЅС‹</h4>
+                  <h4 className="text-sm font-semibold">Заметки Татьяны</h4>
                   <textarea
                     rows={4}
                     className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
@@ -804,7 +804,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                       setDraft((prev) => (prev ? { ...prev, notes: event.target.value } : prev))
                     }
                   />
-                  <label className="block text-xs font-semibold text-stone-500 mb-1">РўРµРіРё (С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ)</label>
+                  <label className="block text-xs font-semibold text-stone-500 mb-1">Теги (через запятую)</label>
                   <input
                     className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
                     value={draft.tags}
@@ -821,7 +821,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                       onClick={() => void handleSaveDetail()}
                       disabled={saving}
                     >
-                      РЎРѕС…СЂР°РЅРёС‚СЊ РєР°СЂС‚РѕС‡РєСѓ
+                      Сохранить карточку
                     </button>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -830,7 +830,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                         disabled={saving}
                       >
                         <PhoneCall size={14} />
-                        РџРѕР·РІРѕРЅРёР»Р°
+                        Позвонила
                       </button>
                       <button
                         className="rounded-lg border border-stone-300 py-2 text-xs font-semibold hover:bg-stone-100 inline-flex items-center justify-center gap-1"
@@ -838,7 +838,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                         disabled={saving}
                       >
                         <MessageSquare size={14} />
-                        РќР°РїРёСЃР°Р»Р°
+                        Написала
                       </button>
                       <button
                         className="rounded-lg border border-amber-300 text-amber-800 bg-amber-50 py-2 text-xs font-semibold hover:bg-amber-100 inline-flex items-center justify-center gap-1"
@@ -846,7 +846,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                         disabled={saving}
                       >
                         <XCircle size={14} />
-                        РќРµ РѕС‚РІРµС‡Р°РµС‚
+                        Не отвечает
                       </button>
                       <button
                         className="rounded-lg border border-violet-300 text-violet-800 bg-violet-50 py-2 text-xs font-semibold hover:bg-violet-100 inline-flex items-center justify-center gap-1"
@@ -854,13 +854,13 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user, meta, onLogout, onUn
                         disabled={saving}
                       >
                         <CheckCircle2 size={14} />
-                        РќР°Р·РЅР°С‡РёС‚СЊ РёРЅС‚РµСЂРІСЊСЋ
+                        Назначить интервью
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="text-xs text-stone-500 border border-stone-200 rounded-lg px-3 py-2">
-                    Р РµР¶РёРј РїСЂРѕСЃРјРѕС‚СЂР°: СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.
+                    Режим просмотра: редактирование недоступно.
                   </div>
                 )}
               </div>
@@ -934,7 +934,7 @@ const AdminApp: React.FC = () => {
       const metaResponse = await getMeta(response.token);
       setMeta(metaResponse);
     } catch (requestError) {
-      setAuthError(requestError instanceof Error ? requestError.message : 'РћС€РёР±РєР° РІС…РѕРґР°.');
+      setAuthError(requestError instanceof Error ? requestError.message : 'Ошибка входа.');
     } finally {
       setAuthLoading(false);
     }
@@ -943,7 +943,7 @@ const AdminApp: React.FC = () => {
   if (loadingSession) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-600">
-        Р—Р°РіСЂСѓР·РєР° СЃРµСЃСЃРёРё...
+        Загрузка сессии...
       </div>
     );
   }
